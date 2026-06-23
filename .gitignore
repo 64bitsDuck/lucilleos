@@ -1,0 +1,13 @@
+# LucilleOS Build Artifacts
+build/
+*.bin
+*.o
+*.img
+*.iso
+
+# Development Tooling Junk
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
