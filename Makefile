@@ -5,7 +5,7 @@ LD = ld
 QEMU = qemu-system-x86_64
 
 # Compilation flags
-CFLAGS = -ffreestanding -O2 -m64 -mno-red-zone -Wall -Wextra
+CFLAGS = -ffreestanding -O2 -m64 -mno-red-zone -fno-stack-protector -mno-sse -mno-mmx -Wall -Wextra
 LDFLAGS = -T kernel/linker.ld
 
 # Directories
@@ -35,11 +35,11 @@ $(BOOT_BIN): $(BOOT_SRC)
 	@mkdir -p $(BUILD_DIR)
 	$(ASM) -f bin $(BOOT_SRC) -o $(BOOT_BIN)
 
-$(BUILD_DIR)/kernel_asm.o: $(KERNEL_ASM_SRC)
+$(BUILD_DIR)/kernel_asm.o: $(KERNEL_ASM_SRC) Makefile
 	@mkdir -p $(BUILD_DIR)
 	$(ASM) -f elf64 $(KERNEL_ASM_SRC) -o $(BUILD_DIR)/kernel_asm.o
 
-$(BUILD_DIR)/kernel_c.o: $(KERNEL_C_SRC)
+$(BUILD_DIR)/kernel_c.o: $(KERNEL_C_SRC) Makefile
 	@mkdir -p $(BUILD_DIR)
 	$(CC) $(CFLAGS) -c $(KERNEL_C_SRC) -o $(BUILD_DIR)/kernel_c.o
 

@@ -26,7 +26,6 @@ void kclear(void) {
 void kscroll(void) {
     volatile char* vga = (volatile char*)VGA_ADDRESS;
 
-    // Shift rows 1-24 up to 0-23
     for (int y = 1; y < VGA_HEIGHT; y++) {
         for (int x = 0; x < VGA_WIDTH; x++) {
             int src = ((y * VGA_WIDTH) + x) * 2;
@@ -36,7 +35,6 @@ void kscroll(void) {
         }
     }
 
-    // Clear bottom row
     for (int x = 0; x < VGA_WIDTH; x++) {
         poke_char(x, VGA_HEIGHT - 1, ' ', DEFAULT_COLOR);
     }
@@ -73,16 +71,75 @@ void kprint(const char* str) {
     }
 }
 
+void kprint_hex(unsigned long long val) {
+    char hex_chars[] = "0123456789ABCDEF";
+    char buffer[19];
+    int pos = 0;
+
+    buffer[pos++] = '0';
+    buffer[pos++] = 'x';
+
+    // Parse bits from most to least significant
+    for (int i = 60; i >= 0; i -= 4) {
+        int nibble = (val >> i) & 0xF;
+        // Skip leading zeros except for the final digit
+        if (pos > 2 || nibble != 0 || i == 0) {
+            buffer[pos++] = hex_chars[nibble];
+        }
+    }
+    buffer[pos] = '\0';
+    kprint(buffer);
+}
+
+void kprint_int(long long val) {
+    char buffer[32];
+    int pos = 0;
+
+    if (val == 0) {
+        kprint_char('0');
+        return;
+    }
+
+    if (val < 0) {
+        kprint_char('-');
+        val = -val;
+    }
+
+    while (val > 0) {
+        buffer[pos++] = '0' + (val % 10);
+        val /= 10;
+    }
+
+    // Print buffer in reverse order
+    for (int i = pos - 1; i >= 0; i--) {
+        kprint_char(buffer[i]);
+    }
+}
+
 void kmain(void) {
     kclear();
 
     kprint("Welcome to LucilleOS!\n");
     kprint("---------------------\n");
-    kprint("Status: 64-bit Long Mode Active\n");
-    kprint("Driver: VGA Text Screen Initialization... SUCCESS\n");
     
-    // Test loop to force scroll validation
-    for (int i = 0; i < 30; i++) {
-        kprint("Testing terminal scroll line allocation...\n");
+    // Validate formatting capabilities
+    kprint("Testing Integer: ");
+    kprint_int(1234567890);
+    kprint("\n");
+
+    kprint("Testing Negative Integer: ");
+    kprint_int(-42);
+    kprint("\n");
+
+    kprint("Testing Kernel Entry Pointer: ");
+    kprint_hex(0x8000);
+    kprint("\n");
+
+    kprint("Testing Max 64-bit Hex Value: ");
+    kprint_hex(0xFFFFFFFFFFFFFFFF);
+    kprint("\n");
+
+    while(1) {
+        __asm__ volatile("hlt");
     }
 }
